@@ -8,48 +8,33 @@
 
 
 
-<!-- Main hero unit for a primary marketing message or call to action -->
-<div id="dropbox" class="hero-unit">
-    <h1>Hello, world!</h1>
-    <span id="droplabel">Drop file here...</span>
-    <div class="progress progress-info progress-striped active">
+<!-- Main hero unit for a primary marketing message or call to action dropzone="copy f:image/png f:image/gif f:image/jpeg"-->
+<div id="dropbox" dropzone="copy f:image/png f:image/gif f:image/jpeg" class="hero-unit">    
+    <h2 id="droplabel">Drop your image here...</h2>
+    <div id="progressBarBox" class="progress progress-info progress-striped active">
       <div class="bar" style="width: 0%;"></div>
     </div>
+    
+    <br/>
     <img id="preview" src="" alt="[ preview will display here ]"/>    
     <p><a class="btn btn-primary btn-large">Learn more &raquo;</a></p>
 </div>
 
-<!-- Example row of columns -->
-<div class="row">
-    <div class="span4">
-        <h2>Heading</h2>
-        <p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus. Etiam porta sem malesuada magna mollis euismod. Donec sed odio dui. </p>
-        <p><a class="btn" href="#">View details &raquo;</a></p>
-    </div>
-    <div class="span4">
-        <h2>Heading</h2>
-        <p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus. Etiam porta sem malesuada magna mollis euismod. Donec sed odio dui. </p>
-        <p><a class="btn" href="#">View details &raquo;</a></p>
-    </div>
-    <div class="span4">
-        <h2>Heading</h2>
-        <p>Donec sed odio dui. Cras justo odio, dapibus ac facilisis in, egestas eget quam. Vestibulum id ligula porta felis euismod semper. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus.</p>
-        <p><a class="btn" href="#">View details &raquo;</a></p>
-    </div>
-</div>
-
 <script type="text/javascript">
+    var fileName = null;
+
     $(document).ready(function () {
         var dropbox = document.getElementById("dropbox")
 
         // init event handlers
         dropbox.addEventListener("dragenter", dragEnter, false);
         dropbox.addEventListener("dragexit", dragExit, false);
+        dropbox.addEventListener("dragleave", dragExit, false);
         dropbox.addEventListener("dragover", dragOver, false);
         dropbox.addEventListener("drop", drop, false);
 
         // init the widgets
-        //$("#progressbar").progressbar();
+        $("#progressBarBox").hide();
     });
 
     function dragEnter(evt) {
@@ -58,6 +43,9 @@
     }
 
     function dragExit(evt) {
+    
+        document.getElementById("droplabel").innerHTML = "Drop file here...";
+
         evt.stopPropagation();
         evt.preventDefault();
     }
@@ -65,6 +53,8 @@
     function dragOver(evt) {
         evt.stopPropagation();
         evt.preventDefault();
+
+        document.getElementById("droplabel").innerHTML = "Now drop the file...";
     }
 
     function drop(evt) {
@@ -82,18 +72,27 @@
 
     function handleFiles(files) {
         var file = files[0];
+        if (file.type.match('^image/')) {
+        //if (file.type.match('^application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') ||
+        //    file.type.match('^application/vnd.ms-excel')) {
+            $("#progressBarBox").show("slow");
+            fileName = file.name;
 
-        document.getElementById("droplabel").innerHTML = "Processing " + file.name;
+            document.getElementById("droplabel").innerHTML = "Processing " + file.name;        
 
-        var reader = new FileReader();
+            var reader = new FileReader();
 
-        // init the reader event handlers
-        reader.onprogress = handleReaderProgress;
-        reader.onloadend = handleReaderLoadEnd;
+            // init the reader event handlers
+            reader.onprogress = handleReaderProgress;
+            reader.onloadend = handleReaderLoadEnd;
 
-        // begin the read operation
-        //reader.readAsArrayBuffer(file);
-        reader.readAsDataURL(file);
+            // begin the read operation
+            //reader.readAsArrayBuffer(file);
+            reader.readAsDataURL(file);
+        }
+        else {
+            document.getElementById("droplabel").innerHTML = "File type not valid";
+        }
     }
 
     function handleReaderProgress(evt) {
@@ -106,12 +105,13 @@
     }
 
     function handleReaderLoadEnd(evt) {
-        //$("#progressbar").progressbar({ value: 100 });
-        $(".bar").css("width", "100%");
+        //document.getElementById("droplabel").innerHTML = "Processed";
+        var droplabel = $("#droplabel");
+        droplabel.text("Upload of file " + fileName + " completed successfully");
+        $(".bar").css("width", "100%");        
         var img = document.getElementById("preview");
         img.src = evt.target.result;
-        //var temp = evt.target.result;
-        document.getElementById("droplabel").innerHTML = "Processed";
+        //var temp = evt.target.result;        
     }  
 
 </script>
