@@ -6,22 +6,25 @@
     <script src="../../Scripts/jquery-1.7.1.js" type="text/javascript"></script>
 }
 
+<form id="fileUpload" action="Home/Upload" method="POST" enctype="multipart/form-data">  
 
-
-<!-- Main hero unit for a primary marketing message or call to action dropzone="copy f:image/png f:image/gif f:image/jpeg"-->
-<div id="dropbox" dropzone="copy f:image/png f:image/gif f:image/jpeg" class="hero-unit">    
-    <h2 id="droplabel">Drop your image here...</h2>
-    <div id="progressBarBox" class="progress progress-info progress-striped active">
-      <div class="bar" style="width: 0%;"></div>
-    </div>
+    <!-- Main hero unit for a primary marketing message or call to action dropzone="copy f:image/png f:image/gif f:image/jpeg"-->
+    <div id="dropbox" dropzone="copy f:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet f:application/vnd.ms-excel" class="hero-unit">    
+        <h2 id="droplabel">Drop your Excel file here...</h2>
+        <div id="progressBarBox" class="progress progress-info progress-striped active">
+          <div class="bar" style="width: 0%;"></div>
+        </div>
     
-    <br/>
-    <img id="preview" src="" alt="[ preview will display here ]"/>    
-    <p><a class="btn btn-primary btn-large">Learn more &raquo;</a></p>
-</div>
+        <br/>
+        <!--<img id="preview" src="" alt="[ preview will display here ]"/>-->
+        <input id="fileSelect" type="file" name="fileSelect" />
+        <p><button type="submit" class="btn btn-primary btn-large">Start upload &raquo;</button></p>
+    </div>
+</form>
 
 <script type="text/javascript">
     var fileName = null;
+    
 
     $(document).ready(function () {
         var dropbox = document.getElementById("dropbox")
@@ -35,6 +38,7 @@
 
         // init the widgets
         $("#progressBarBox").hide();
+        $("#fileSelect").hide();
     });
 
     function dragEnter(evt) {
@@ -60,7 +64,7 @@
     function drop(evt) {
         evt.stopPropagation();
         evt.preventDefault();
-
+        $(".bar").css("width", "0%");
         var files = evt.dataTransfer.files;
         var count = files.length;
 
@@ -72,9 +76,9 @@
 
     function handleFiles(files) {
         var file = files[0];
-        if (file.type.match('^image/')) {
-        //if (file.type.match('^application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') ||
-        //    file.type.match('^application/vnd.ms-excel')) {
+        //if (file.type.match('^image/')) {
+        if (file.type.match('^application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') ||
+            file.type.match('^application/vnd.ms-excel')) {
             $("#progressBarBox").show("slow");
             fileName = file.name;
 
@@ -87,8 +91,9 @@
             reader.onloadend = handleReaderLoadEnd;
 
             // begin the read operation
-            //reader.readAsArrayBuffer(file);
-            reader.readAsDataURL(file);
+            reader.readAsArrayBuffer(file);
+            //reader.readAsDataURL(file);
+            this.UploadFile(file);
         }
         else {
             document.getElementById("droplabel").innerHTML = "File type not valid";
@@ -109,10 +114,55 @@
         var droplabel = $("#droplabel");
         droplabel.text("Upload of file " + fileName + " completed successfully");
         $(".bar").css("width", "100%");        
-        var img = document.getElementById("preview");
-        img.src = evt.target.result;
-        //var temp = evt.target.result;        
-    }  
+        //var img = document.getElementById("preview");
+        //img.src = evt.target.result;
+        var excelFile = evt.target.result;
+    }
+
+    // Uploads a file to the server
+    function UploadFile(file) {
+        var xhr = new XMLHttpRequest();
+
+        if (xhr.upload) { // if the browser supports the XMLHttpRequest2 object
+            xhr.upload.addEventListener("progress", function (evt) {
+                if (evt.lengthComputable) {
+                    var pc = parseInt(100 - (evt.loaded / evt.total * 100));
+                }
+            }, false);
+            
+            // File uploaded
+            xhr.addEventListener("load", function () {
+                var pc = 4;
+            }, false);
+                     
+            /* file received/failed
+            xhr.onreadystatechange = function (e) {
+                if (xhr.readyState == 4) {
+                    if (xhr.status == 200) {
+                        window.alert("Transfer complete");
+                    }
+                }
+            };
+            */                        
+            //xhr.open("POST", $("#fileUpload").action, true);
+            xhr.open("POST", "Home/Upload", true);
+
+            // Set appropriate headers
+            // We're going to use these in the UploadFile method
+            // To determine what is being uploaded.
+            xhr.setRequestHeader("Content-Type", "multipart/form-data");
+            xhr.setRequestHeader("X-File-Name", file.fileName);
+            xhr.setRequestHeader("X-File-Size", file.fileSize);
+            xhr.setRequestHeader("X-File-Type", file.type);
+
+            // Send the file                        
+            xhr.send(file);
+        }
+
+        function dummyCallback() {
+            
+        };
+    }
 
 </script>
 
