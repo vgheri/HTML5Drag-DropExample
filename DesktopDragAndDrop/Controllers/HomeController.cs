@@ -22,7 +22,6 @@ namespace DesktopDragAndDrop.Controllers
             UploadedFile file = RetrieveFileFromRequest();
 
             return RedirectToAction("Index");
-                      
         }
 
         public ActionResult About()
