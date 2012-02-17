@@ -10,7 +10,8 @@
 
     <!-- Main hero unit for a primary marketing message or call to action dropzone="copy f:image/png f:image/gif f:image/jpeg" f:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet f:application/vnd.ms-excel-->
     <div id="dropbox" dropzone="copy f:image/png f:image/gif f:image/jpeg" class="hero-unit">    
-        <h2 id="droplabel">Drop zone</h2>        
+        <h2 id="droplabel">Drop zone</h2>  
+        <p id="dnd-notes">Only images file type are supported. Multiupload is not currentrly supported. Once you will drop your image in the dropzone, the upload will start.</p>      
         <table id="files-list-table">
             <thead>
                 <tr>
@@ -41,7 +42,11 @@
             </tbody>
         </table> 
         
-        <br/>        
+        <br/> 
+        <div id="multiupload-alert"class="alert alert-error">            
+            <h4 class="alert-heading">Warning!</h4>      
+            <span id="multiupload-alert-message"></span>      
+        </div>       
         <input id="fileSelect" type="file" name="fileSelect" />
         <p><button id="fallback-submit" type="submit" class="btn btn-primary btn-large">Upload</button></p>
     </div>
@@ -54,12 +59,13 @@
     $(document).ready(function () {
         // init the widgets
         $("#progressBarBox").hide();
-        $("#files-list-table").hide();        
+        $("#files-list-table").hide();
 
         // CFeck if FileAPI and XmlHttpRequest.upload are supported, so that we can hide the old style input method
         if (window.File && window.FileReader && window.FileList && window.Blob && new XMLHttpRequest().upload) {
             $("#fileSelect").hide();
             $("#fallback-submit").hide();
+            $("#multiupload-alert").hide();
             var dropbox = document.getElementById("dropbox")
             // init event handlers
             dropbox.addEventListener("dragenter", dragEnter, false);
@@ -67,6 +73,9 @@
             dropbox.addEventListener("dragleave", dragExit, false);
             dropbox.addEventListener("dragover", dragOver, false);
             dropbox.addEventListener("drop", drop, false);
+        }
+        else {
+            $("#dnd-notes").hide();
         }
     });
 
@@ -92,22 +101,31 @@
     function drop(evt) {
         evt.stopPropagation();
         evt.preventDefault();
-       
+
         $("#dropbox").removeClass("active-dropzone");
+        var temp = $("#multiupload-alert");
+        // If there is an alert message displayed, we hide it
+        $("#multiupload-alert").hide();
         var files = evt.dataTransfer.files;
         var count = files.length;
-        $("#files-list-table").show();
+        
         // Only call the handler if 1 or more files was dropped.
-        if (count > 0)
+        if (count == 1) {
             handleFiles(files);
+        }
+        else if (count > 1) {
+            var message = "Multiupload is not currently supported. Choose only one file.";
+            $("#multiupload-alert-message").html(message);            
+            $("#multiupload-alert").show();
+        }
     }
 
-    function handleFiles(files) {
+    function handleFiles(files) {        
         var file = files[0];
-        if (file.type.match('^image/')) {                  
+        if (file.type.match('^image/')) {
+            $("#files-list-table").show();
             fileToUpload = file;
             fileName = file.name;       
-
             var reader = new FileReader();
 
             // init the reader event handlers
@@ -119,8 +137,10 @@
             reader.readAsDataURL(file);
             this.UploadFile(file);
         }
-        else {
-            window.alert("File type not valid. Only images are allowed.");
+        else {            
+            var message = "File type not valid. Only images are allowed.";
+            $("#multiupload-alert-message").html(message);       
+            $("#multiupload-alert").show();
         }
     }
 
