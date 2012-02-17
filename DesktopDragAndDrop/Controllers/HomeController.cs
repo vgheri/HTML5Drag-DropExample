@@ -20,8 +20,10 @@ namespace DesktopDragAndDrop.Controllers
         public ActionResult Upload()
         {
             UploadedFile file = RetrieveFileFromRequest();
+            string savePath = string.Empty;
+            SaveFile(file);
 
-            return RedirectToAction("Index");
+            return RedirectToAction("Index");          
         }
 
         public ActionResult About()
@@ -39,6 +41,7 @@ namespace DesktopDragAndDrop.Controllers
             { //they're uploading the old way
                 var file = Request.Files[0];
                 fileContents = new byte[file.ContentLength];
+                file.InputStream.Read(fileContents, 0, file.ContentLength);
                 fileType = file.ContentType;
                 filename = file.FileName;
             }
@@ -58,6 +61,35 @@ namespace DesktopDragAndDrop.Controllers
                 FileSize = fileContents != null ? fileContents.Length : 0,
                 Contents = fileContents
             };
+        }
+
+        /// <summary>
+        /// Saves the image
+        /// </summary>
+        /// <param name="logoUpload"></param>
+        private void SaveFile(UploadedFile file)
+        {
+            System.IO.FileStream stream = null;
+            try
+            {
+                var physicalPath = Server.MapPath("~/Content");                 
+                //var fileName = System.IO.Path.GetFileName(file.Filename);
+                var fileName = System.IO.Path.GetFileNameWithoutExtension(file.Filename);
+                fileName = fileName + DateTime.Now.Ticks + System.IO.Path.GetExtension(file.Filename);
+                var path = System.IO.Path.Combine(physicalPath, fileName);
+                stream = new System.IO.FileStream(path, System.IO.FileMode.Create, System.IO.FileAccess.Write);
+                if (stream.CanWrite)
+                {
+                    stream.Write(file.Contents, 0, file.Contents.Length);
+                }
+            }
+            finally
+            {
+                if (stream != null)
+                {
+                    stream.Close();
+                }
+            }
         }
     }
 }

@@ -1,0 +1,36 @@
+﻿/* File Created: February 15, 2012 */
+#files-list-table 
+{
+	width: 95%;	
+	text-align: left;	
+}
+
+.tableData
+{
+	padding: 5% 3% 0 0;	
+	width: 150px;	
+	overflow-x: hidden;
+	max-width: 150px;
+}
+
+#preview 
+{
+    border: 2px solid #4195fc;
+}
+
+.active-dropzone 
+{	
+	border: 3px solid #4195fc;
+	box-shadow: 0px 0px 4px #4195fc; /* some variation of blue for the shadow */
+	-moz-box-shadow: 0px 0px 4px #4195fc;
+	-webkit-box-shadow: 0px 0px 4px #4195fc;
+	border-radius: 5px;
+	-webkit-border-radius: 3px;
+	-moz-border-radius: 3px;
+	
+}
+
+#fileSelect
+{   
+    width: 400px;
+}

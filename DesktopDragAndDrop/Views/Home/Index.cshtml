@@ -12,6 +12,14 @@
     <div id="dropbox" dropzone="copy f:image/png f:image/gif f:image/jpeg" class="hero-unit">    
         <h2 id="droplabel">Drop zone</h2>        
         <table id="files-list-table">
+            <thead>
+                <tr>
+                    <th></th>
+                    <th>File name</th>
+                    <th>File size</th>
+                    <th>Upload status</th>
+                </tr>
+            </thead>
             <tbody>
                 <tr>
                     <td id="td-img-preview" class="tableData">
@@ -22,8 +30,8 @@
                     <td id="td-progress-bar" class="tableData">
                         <div id="progressBarBox" class="progress progress-info progress-striped">
                           <div class="bar"></div>
-                        </div>
-                    </td> 
+                        </div>                        
+                    </td>                     
                     <!--                   
                     <td id="td-upload-button" class="tableData">
                         <button type="submit" class="btn btn-primary btn-large">Upload</button>
@@ -35,7 +43,7 @@
         
         <br/>        
         <input id="fileSelect" type="file" name="fileSelect" />
-        <!--<p><button type="submit" class="btn btn-primary btn-large">Upload All</button></p>-->
+        <p><button id="fallback-submit" type="submit" class="btn btn-primary btn-large">Upload</button></p>
     </div>
 </form>
 
@@ -44,21 +52,22 @@
     var fileToUpload = null;
 
     $(document).ready(function () {
-        var dropbox = document.getElementById("dropbox")
-
-        // init event handlers
-        dropbox.addEventListener("dragenter", dragEnter, false);
-        dropbox.addEventListener("dragexit", dragExit, false);
-        dropbox.addEventListener("dragleave", dragExit, false);
-        dropbox.addEventListener("dragover", dragOver, false);
-        dropbox.addEventListener("drop", drop, false);
-
         // init the widgets
         $("#progressBarBox").hide();
-        // VGTODO check if DnD, FileAPI and XmlHttpRequest.upload are supported
-        $("#fileSelect").hide();
+        $("#files-list-table").hide();        
 
-        $("#files-list-table").hide();
+        // CFeck if FileAPI and XmlHttpRequest.upload are supported, so that we can hide the old style input method
+        if (window.File && window.FileReader && window.FileList && window.Blob && new XMLHttpRequest().upload) {
+            $("#fileSelect").hide();
+            $("#fallback-submit").hide();
+            var dropbox = document.getElementById("dropbox")
+            // init event handlers
+            dropbox.addEventListener("dragenter", dragEnter, false);
+            dropbox.addEventListener("dragexit", dragExit, false);
+            dropbox.addEventListener("dragleave", dragExit, false);
+            dropbox.addEventListener("dragover", dragOver, false);
+            dropbox.addEventListener("drop", drop, false);
+        }
     });
 
     function dragEnter(evt) {
@@ -67,24 +76,23 @@
     }
 
     function dragExit(evt) {
-    
-        //document.getElementById("droplabel").innerHTML = "Drop file here...";
-        $("#dropbox").removeClass("active-dropzone");
         evt.stopPropagation();
         evt.preventDefault();
+        
+        $("#dropbox").removeClass("active-dropzone");        
     }
 
     function dragOver(evt) {
         evt.stopPropagation();
         evt.preventDefault();
                 
-        $("#dropbox").addClass("active-dropzone");
-        //document.getElementById("droplabel").innerHTML = "Now drop the file...";
+        $("#dropbox").addClass("active-dropzone");        
     }
 
     function drop(evt) {
         evt.stopPropagation();
         evt.preventDefault();
+       
         $("#dropbox").removeClass("active-dropzone");
         var files = evt.dataTransfer.files;
         var count = files.length;
@@ -94,12 +102,9 @@
             handleFiles(files);
     }
 
-
     function handleFiles(files) {
         var file = files[0];
-        if (file.type.match('^image/')) {
-        //if (file.type.match('^application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') ||
-        //   file.type.match('^application/vnd.ms-excel')) {            
+        if (file.type.match('^image/')) {                  
             fileToUpload = file;
             fileName = file.name;       
 
@@ -131,57 +136,56 @@
     function handleReaderLoadEnd(evt) {                        
         var img = document.getElementById("preview");
         img.src = evt.target.result;
-        $("#td-file-name").text(fileToUpload.name);
+        var fileName = fileToUpload.name;
+        if (fileName.length > 20) {
+            fileName = fileName.substring(0, 20);
+            fileName = fileName + "...";
+        }
+        $("#td-file-name").text(fileName);
         var size = fileToUpload.size / 1024;
+        size = Math.round(size * Math.pow(10, 2)) / Math.pow(10, 2);
         $("#td-file-size").text(size + "Kb");
-        $("#progressBarBox").show("slow");
+        $("#progressBarBox").show("fast");
     }
 
     // Uploads a file to the server
     function UploadFile(file) {
-        var xhr = new XMLHttpRequest();
-
-        if (xhr.upload) { // if the browser supports the XMLHttpRequest2 object
-            xhr.upload.addEventListener("progress", function (evt) {
-                if (evt.lengthComputable) {
-                    var percentageUploaded = parseInt(100 - (evt.loaded / evt.total * 100));
-                    $(".bar").css("width", percentageUploaded + "%");
-                }
-            }, false);
+        var xhr = new XMLHttpRequest();                
+        xhr.upload.addEventListener("progress", function (evt) {
+            if (evt.lengthComputable) {
+                var percentageUploaded = parseInt(100 - (evt.loaded / evt.total * 100));
+                $(".bar").css("width", percentageUploaded + "%");
+            }
+        }, false);
             
-            // File uploaded
-            xhr.addEventListener("load", function () {
-                $(".bar").css("width", "100%");
-
-            }, false);
+        // File uploaded
+        xhr.addEventListener("load", function () {
+            $(".bar").css("width", "100%");
+        }, false);
                      
-            /* file received/failed
-            xhr.onreadystatechange = function (e) {
-                if (xhr.readyState == 4) {
-                    if (xhr.status == 200) {
-                        window.alert("Transfer complete");
-                    }
+        /* file received/failed
+        xhr.onreadystatechange = function (e) {
+            if (xhr.readyState == 4) {
+                if (xhr.status == 200) {
+                    window.alert("Transfer complete");
                 }
-            };
-            */                        
-            //xhr.open("POST", $("#fileUpload").action, true);
-            xhr.open("POST", "/Home/Upload", true);
-
-            // Set appropriate headers
-            // We're going to use these in the UploadFile method
-            // To determine what is being uploaded.
-            xhr.setRequestHeader("Content-Type", "multipart/form-data");
-            xhr.setRequestHeader("X-File-Name", file.fileName);
-            xhr.setRequestHeader("X-File-Size", file.fileSize);
-            xhr.setRequestHeader("X-File-Type", file.type);
-
-            // Send the file                        
-            xhr.send(file);
-        }
-
-        function dummyCallback() {
-            
+            }
         };
+        */ 
+                               
+        //xhr.open("POST", $("#fileUpload").action, true);
+        xhr.open("POST", "/Home/Upload", true);
+
+        // Set appropriate headers
+        // We're going to use these in the UploadFile method
+        // To determine what is being uploaded.
+        xhr.setRequestHeader("Content-Type", "multipart/form-data");
+        xhr.setRequestHeader("X-File-Name", file.fileName);
+        xhr.setRequestHeader("X-File-Size", file.fileSize);
+        xhr.setRequestHeader("X-File-Type", file.type);
+
+        // Send the file                        
+        xhr.send(file);
     }
 
 </script>
