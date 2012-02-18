@@ -183,15 +183,16 @@
             $(".bar").css("width", "100%");
         }, false);
                      
-        /* file received/failed
+        // file received/failed
         xhr.onreadystatechange = function (e) {
             if (xhr.readyState == 4) {
                 if (xhr.status == 200) {
-                    window.alert("Transfer complete");
+                    var link = "<a href=\"" + xhr.responseText + "\" target=\"_blank\">" + fileName + "</a>";                     
+                    $("#td-file-name").html(link);
                 }
             }
         };
-        */ 
+         
                                
         //xhr.open("POST", $("#fileUpload").action, true);
         xhr.open("POST", "/Home/Upload", true);

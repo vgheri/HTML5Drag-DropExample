@@ -17,13 +17,13 @@ namespace DesktopDragAndDrop.Controllers
         }
 
         [HttpPost]        
-        public ActionResult Upload()
+        public string Upload()
         {
             UploadedFile file = RetrieveFileFromRequest();
             string savePath = string.Empty;
-            SaveFile(file);
+            string virtualPath = SaveFile(file);
 
-            return RedirectToAction("Index");          
+            return virtualPath;         
         }
 
         public ActionResult About()
@@ -67,16 +67,18 @@ namespace DesktopDragAndDrop.Controllers
         /// Saves the image
         /// </summary>
         /// <param name="logoUpload"></param>
-        private void SaveFile(UploadedFile file)
+        private string SaveFile(UploadedFile file)
         {
             System.IO.FileStream stream = null;
+            var virtualPath = string.Empty;
             try
             {
-                var physicalPath = Server.MapPath("~/Content");                 
-                //var fileName = System.IO.Path.GetFileName(file.Filename);
+                var physicalPath = Server.MapPath("~/Content");
+                virtualPath = "/Content/";                
                 var fileName = System.IO.Path.GetFileNameWithoutExtension(file.Filename);
                 fileName = fileName + DateTime.Now.Ticks + System.IO.Path.GetExtension(file.Filename);
                 var path = System.IO.Path.Combine(physicalPath, fileName);
+                virtualPath = virtualPath + fileName;
                 stream = new System.IO.FileStream(path, System.IO.FileMode.Create, System.IO.FileAccess.Write);
                 if (stream.CanWrite)
                 {
@@ -90,6 +92,7 @@ namespace DesktopDragAndDrop.Controllers
                     stream.Close();
                 }
             }
+            return virtualPath;
         }
     }
 }
