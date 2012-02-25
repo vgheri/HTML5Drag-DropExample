@@ -16,6 +16,11 @@ namespace DesktopDragAndDrop.Controllers
             return View();
         }
 
+        public ActionResult About()
+        {
+            return View();
+        }
+
         [HttpPost]        
         public string Upload()
         {
@@ -24,12 +29,7 @@ namespace DesktopDragAndDrop.Controllers
             string virtualPath = SaveFile(file);
 
             return virtualPath;         
-        }
-
-        public ActionResult About()
-        {
-            return View();
-        }
+        }        
 
         private UploadedFile RetrieveFileFromRequest()
         {
@@ -38,7 +38,7 @@ namespace DesktopDragAndDrop.Controllers
             byte[] fileContents = null;
 
             if (Request.Files.Count > 0)
-            { //they're uploading the old way
+            { //we are uploading the old way
                 var file = Request.Files[0];
                 fileContents = new byte[file.ContentLength];
                 file.InputStream.Read(fileContents, 0, file.ContentLength);

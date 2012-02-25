@@ -24,7 +24,7 @@
             <tbody>
                 <tr>
                     <td id="td-img-preview" class="tableData">
-                        <img id="preview" src="" alt="[ preview will display here ]" />
+                        <img id="preview" src="" alt="preview will display here" />
                     </td>
                     <td id="td-file-name" class="tableData"></td>
                     <td id="td-file-size" class="tableData"></td>
@@ -32,12 +32,7 @@
                         <div id="progressBarBox" class="progress progress-info progress-striped">
                           <div class="bar"></div>
                         </div>                        
-                    </td>                     
-                    <!--                   
-                    <td id="td-upload-button" class="tableData">
-                        <button type="submit" class="btn btn-primary btn-large">Upload</button>
                     </td>
-                    -->
                 </tr>
             </tbody>
         </table> 
@@ -61,7 +56,7 @@
         $("#progressBarBox").hide();
         $("#files-list-table").hide();
 
-        // CFeck if FileAPI and XmlHttpRequest.upload are supported, so that we can hide the old style input method
+        // Check if FileAPI and XmlHttpRequest.upload are supported, so that we can hide the old style input method
         if (window.File && window.FileReader && window.FileList && window.Blob && new XMLHttpRequest().upload) {
             $("#fileSelect").hide();
             $("#fallback-submit").hide();
@@ -75,6 +70,7 @@
             dropbox.addEventListener("drop", drop, false);
         }
         else {
+            $("#multiupload-alert").hide();
             $("#dnd-notes").hide();
         }
     });
@@ -109,7 +105,7 @@
         var files = evt.dataTransfer.files;
         var count = files.length;
         
-        // Only call the handler if 1 or more files was dropped.
+        // Only call the handler if 1 file was dropped.
         if (count == 1) {
             handleFiles(files);
         }
@@ -129,11 +125,10 @@
             var reader = new FileReader();
 
             // init the reader event handlers
-            //reader.onprogress = handleReaderProgress;
+            //reader.onprogress = handleReaderProgress; Commented out as we don't really need it
             reader.onloadend = handleReaderLoadEnd;
 
-            // begin the read operation
-            //reader.readAsArrayBuffer(file);
+            // begin the read operation            
             reader.readAsDataURL(file);
             this.UploadFile(file);
         }
@@ -147,8 +142,7 @@
     function handleReaderProgress(evt) {
         if (evt.lengthComputable) {
             var loaded = (evt.loaded / evt.total);
-            var progress = loaded * 100;
-            //$("#progressbar").progressbar({ value: loaded * 100 });            
+            var progress = loaded * 100;                        
             $(".bar").css("width", progress + "%");
         }
     }
@@ -191,15 +185,11 @@
                     $("#td-file-name").html(link);
                 }
             }
-        };
-         
-                               
-        //xhr.open("POST", $("#fileUpload").action, true);
+        };                                       
+        
         xhr.open("POST", "/Home/Upload", true);
 
-        // Set appropriate headers
-        // We're going to use these in the UploadFile method
-        // To determine what is being uploaded.
+        // Set appropriate headers        
         xhr.setRequestHeader("Content-Type", "multipart/form-data");
         xhr.setRequestHeader("X-File-Name", file.fileName);
         xhr.setRequestHeader("X-File-Size", file.fileSize);
