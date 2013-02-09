@@ -1,9 +1,7 @@
 ﻿
 @if (false)
 {
-    <script src="../../Scripts/jquery-1.7.1-vsdoc.js" type="text/javascript"></script>
-    <script src="../../Scripts/jquery-ui-1.8.17.js" type="text/javascript"></script>
-    <script src="../../Scripts/jquery-1.7.1.js" type="text/javascript"></script>
+    <script src="../../Scripts/jquery-1.9.1-vsdoc.js" type="text/javascript"></script>       
 }
 
 <form id="fileUpload" action="/Home/Upload" method="POST" enctype="multipart/form-data">  
@@ -47,10 +45,11 @@
     </div>
 </form>
 
+<script type"text/javascript" src="@Url.Content("~/Js/dnd-promises.js")"></script>
 <script type="text/javascript">
     var fileName = null;
     var fileToUpload = null;
-
+    var d1, d2, d3, d4, d5;
     $(document).ready(function () {
         // init the widgets
         $("#progressBarBox").hide();
@@ -107,7 +106,44 @@
         
         // Only call the handler if 1 file was dropped.
         if (count == 1) {
-            handleFiles(files);
+            var file = files[0];
+            fileToUpload = file;
+            fileName = file.name;
+            $("#files-list-table").show();
+            
+            jePromise.handleFile(file).
+            then(function (url) {
+                var deferred = $.Deferred(function (d) {
+                    var img = document.getElementById("preview");
+                    img.src = url;
+                    if (fileName.length > 20) {
+                        fileName = fileName.substring(0, 20);
+                        fileName = fileName + "...";
+                    }                    
+                    $("#td-file-name").text(fileName);
+                    var size = fileToUpload.size / 1024;
+                    size = Math.round(size * Math.pow(10, 2)) / Math.pow(10, 2);
+                    $("#td-file-size").text(size + "Kb");
+                    $("#progressBarBox").show("fast");
+                    d.resolve();
+                });
+                return deferred.promise();
+            })
+            .then(function () {
+                return jePromise.UploadFile(file);
+            })
+            .then(
+                function (link) {
+                    $("#td-file-name").html(link);
+                    $(".bar").css("width", "100%");
+                },
+                function (err) {
+                    console.log(err);
+                },
+                function (progress) {
+                    $(".bar").css("width", progress.toString() + "%");
+                }
+             ); 
         }
         else if (count > 1) {
             var message = "Multiupload is not currently supported. Choose only one file.";
@@ -115,90 +151,6 @@
             $("#multiupload-alert").show();
         }
     }
-
-    function handleFiles(files) {        
-        var file = files[0];
-        if (file.type.match('^image/')) {
-            $("#files-list-table").show();
-            fileToUpload = file;
-            fileName = file.name;       
-            var reader = new FileReader();
-
-            // init the reader event handlers
-            //reader.onprogress = handleReaderProgress; Commented out as we don't really need it
-            reader.onloadend = handleReaderLoadEnd;
-
-            // begin the read operation            
-            reader.readAsDataURL(file);
-            this.UploadFile(file);
-        }
-        else {            
-            var message = "File type not valid. Only images are allowed.";
-            $("#multiupload-alert-message").html(message);       
-            $("#multiupload-alert").show();
-        }
-    }
-
-    function handleReaderProgress(evt) {
-        if (evt.lengthComputable) {
-            var loaded = (evt.loaded / evt.total);
-            var progress = loaded * 100;                        
-            $(".bar").css("width", progress + "%");
-        }
-    }
-
-    function handleReaderLoadEnd(evt) {                        
-        var img = document.getElementById("preview");
-        img.src = evt.target.result;
-        var fileName = fileToUpload.name;
-        if (fileName.length > 20) {
-            fileName = fileName.substring(0, 20);
-            fileName = fileName + "...";
-        }
-        $("#td-file-name").text(fileName);
-        var size = fileToUpload.size / 1024;
-        size = Math.round(size * Math.pow(10, 2)) / Math.pow(10, 2);
-        $("#td-file-size").text(size + "Kb");
-        $("#progressBarBox").show("fast");
-    }
-
-    // Uploads a file to the server
-    function UploadFile(file) {
-        var xhr = new XMLHttpRequest();                
-        xhr.upload.addEventListener("progress", function (evt) {
-            if (evt.lengthComputable) {
-                var percentageUploaded = parseInt(100 - (evt.loaded / evt.total * 100));
-                $(".bar").css("width", percentageUploaded + "%");
-            }
-        }, false);
-            
-        // File uploaded
-        xhr.addEventListener("load", function () {
-            $(".bar").css("width", "100%");
-        }, false);
-                     
-        // file received/failed
-        xhr.onreadystatechange = function (e) {
-            if (xhr.readyState == 4) {
-                if (xhr.status == 200) {
-                    var link = "<a href=\"" + xhr.responseText + "\" target=\"_blank\">" + fileName + "</a>";                     
-                    $("#td-file-name").html(link);
-                }
-            }
-        };                                       
-        
-        xhr.open("POST", "/Home/Upload", true);
-
-        // Set appropriate headers        
-        xhr.setRequestHeader("Content-Type", "multipart/form-data");
-        xhr.setRequestHeader("X-File-Name", file.fileName);
-        xhr.setRequestHeader("X-File-Size", file.fileSize);
-        xhr.setRequestHeader("X-File-Type", file.type);
-
-        // Send the file                        
-        xhr.send(file);
-    }
-
 </script>
 
     
